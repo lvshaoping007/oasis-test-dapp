@@ -7,7 +7,7 @@ import * as oasisRT from '@oasisprotocol/client-rt';
 import * as oasisExt from '@oasisprotocol/client-ext-utils';
 
 
-const haveInterActive = false
+const haveInterActive = true
 const extPath = haveInterActive ? '/oasis-xu-frame.html?test_noninteractive=1' : undefined;
 
 function toBase64(/** @type {Uint8Array} */ u8) {
