@@ -67,10 +67,10 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
-"@oasisprotocol/client-ext-utils@0.1.0-alpha1":
-  version "0.1.0-alpha1"
-  resolved "https://registry.yarnpkg.com/@oasisprotocol/client-ext-utils/-/client-ext-utils-0.1.0-alpha1.tgz#8044754612706e75c127354c7891aa1b295ad2ed"
-  integrity sha512-aAGVex0WTNM9l3nOVvc4QaBWK/Y7Z3MRHBhPfrzeXP+W6WJVvDEpkyxiq+806M+fQIVULwilafvwdDY0LupebA==
+"@oasisprotocol/client-ext-utils@0.1.0-alpha2":
+  version "0.1.0-alpha2"
+  resolved "https://registry.yarnpkg.com/@oasisprotocol/client-ext-utils/-/client-ext-utils-0.1.0-alpha2.tgz#caa666565fee151863208f371823c9509f0df935"
+  integrity sha512-VtU7i6T+8khELtUbICI1hCFUePWBcob4CfnYmOYvRmD2t6HIbbWtWWgM6I49rBhs6f8bhOegI/lkgYlXQadptA==
   dependencies:
     "@oasisprotocol/client" "^0.1.0-alpha5"
 
