@@ -189,7 +189,7 @@ const playground = (async function () {
       let receiveAddress = receiveAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
       receiveAddress = await oasis.staking.addressFromBech32(receiveAddress)
 
-      let sendNonce = sendNonceInput.value || 43
+      let sendNonce = sendNonceInput.value ? +sendNonceInput.value : 43
 
       let sendFeeGas = sendFeeGasInput.value || 3000
       sendFeeGas = oasis.quantity.fromBigInt(sendFeeGas)
@@ -267,7 +267,7 @@ const playground = (async function () {
     let vaildatorAddress = vaildatorAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
     vaildatorAddress = await oasis.staking.addressFromBech32(vaildatorAddress)
 
-    let stakeNonce = stakeNonceInput.value || 43
+    let stakeNonce = stakeNonceInput.value ? +stakeNonceInput.value : 43
 
     let stakeFeeGas = stakeFeeGasInput.value || 3000
     stakeFeeGas = oasis.quantity.fromBigInt(stakeFeeGas)
