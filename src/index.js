@@ -191,8 +191,7 @@ const playground = (async function () {
 
       let sendNonce = sendNonceInput.value ? +sendNonceInput.value : 43
 
-      let sendFeeGas = sendFeeGasInput.value || 3000
-      sendFeeGas = oasis.quantity.fromBigInt(sendFeeGas)
+      let sendFeeGas = sendFeeGasInput.value ? +sendFeeGasInput.value : 3000
 
       let sendFeeAmount = sendFeeAmountInput.value || 0
       sendFeeAmount = oasis.quantity.fromBigInt(sendFeeAmount)
@@ -269,8 +268,7 @@ const playground = (async function () {
 
     let stakeNonce = stakeNonceInput.value ? +stakeNonceInput.value : 43
 
-    let stakeFeeGas = stakeFeeGasInput.value || 3000
-    stakeFeeGas = oasis.quantity.fromBigInt(stakeFeeGas)
+    let stakeFeeGas = stakeFeeGasInput.value ? +stakeFeeGasInput.value : 3000
 
     let stakeFeeAmount = stakeFeeAmountInput.value || 0
     stakeFeeAmount = oasis.quantity.fromBigInt(stakeFeeAmount)
