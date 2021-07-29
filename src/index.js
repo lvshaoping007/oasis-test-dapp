@@ -43,7 +43,7 @@ function watchKeys(conn, handleNewKeys) {
 }
 
 function getOasisClient(){
-  const oasisClient = new oasis.client.NodeInternal("https://grpc-testnet.oasisscan.com")
+  const oasisClient = new oasis.client.NodeInternal("https://grpc-web.oasis.dev/api/testnet")
   return oasisClient
 }
 
