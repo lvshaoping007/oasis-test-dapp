@@ -109,6 +109,7 @@ const playground = (async function () {
       console.log('publicKey',uint2hex(public_key))
       const data = await oasis.staking.addressFromPublicKey(public_key)
       address =  oasis.staking.addressToBech32(data)
+      account.which = publicKey.which
       account.public_key = public_key
       account.address = address
     }
@@ -156,6 +157,9 @@ const playground = (async function () {
       // 设置feeGas
       // 设置feeAmount
       console.log('sendButton=====0',account);
+      // TODO: switch to the below and make the extension compatible, likely by replicating the
+      // address in the `which` field in the keys list implementation
+      // let from = account && account.which  ? account.which : ""
       let from = account && account.address  ? account.address : ""
       const KEY_ID = 'sample-singleton';
       console.log('sendButton=====1',from);
