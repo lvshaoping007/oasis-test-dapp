@@ -205,7 +205,7 @@ const playground = (async function () {
           to: receiveAddress,
           amount: sendAmount,
         });
-      await tw.sign(signer, 'fake-chain-context-for-testing');
+      await tw.sign(signer, '5ba68bc5e01e06f755c4c044dd11ec508e4c17f1faf40c0e67874388437a9e55');
       
       console.log('sendButton=====5',tw.signedTransaction.signature.signature);
       console.log('sendButton=====6',uint2hex(tw.signedTransaction.signature.signature));
@@ -288,7 +288,7 @@ const playground = (async function () {
         amount: addEscrowAmount,
       });
     // 第七步 签名
-    let res = await tw.sign(signer, 'fake-chain-context-for-testing');
+    let res = await tw.sign(signer, '5ba68bc5e01e06f755c4c044dd11ec508e4c17f1faf40c0e67874388437a9e55');
     let signature = hex2uint(tw.signedTransaction.signature.signature)
     let base64Sign = toBase64(signature)
     let hash = await tw.hash()
