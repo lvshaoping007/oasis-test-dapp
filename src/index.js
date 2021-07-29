@@ -86,6 +86,8 @@ const playground = (async function () {
         console.log('watchKeys======0',connection);
         watchKeys(connection, (newKeys) => {
           console.log('watchKeys======1',newKeys);
+          if (!newKeys) throw new Error('new keys falsy');
+          if (!newKeys.length) throw new Error('new keys empty');
           console.log('keys change',toBase64(newKeys[0].metadata.public_key));
         });
 
