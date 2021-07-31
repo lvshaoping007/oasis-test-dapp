@@ -58,8 +58,8 @@ async function getUseBalance(address) {
   if (account && account.code && account.code !== 0) {
     return { err: account }
   }
-  let balance = account?.general?.balance || 0
-  balance = oasis.quantity.toBigInt(balance).toString()
+  let balance = account?.general?.balance
+  balance = (balance ? oasis.quantity.toBigInt(balance) : 0).toString()
   let nonce = account?.general?.nonce || 0
   return { balance, nonce }
 }
