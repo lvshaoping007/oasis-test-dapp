@@ -208,7 +208,7 @@ const playground = (async function () {
         // 授权完账后就开始渲染账户情况
         // 获取账户余额 和nonce  然后显示在页面上
         // nonce 显示在输入框里 和html外面
-        accountsResults.innerHTML = address || 'Not able to get accounts'
+        accountsResults.innerHTML = result || 'Not able to get accounts'
       } else {
         result = keys.error
         accountsResults.innerHTML = result || 'Not able to get accounts'
