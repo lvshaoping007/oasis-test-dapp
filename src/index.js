@@ -24,6 +24,7 @@ async function publicKeyToAddress(publicKey){
     console.log('publicKey', uint2hex(public_key))
     const data = await oasis.staking.addressFromPublicKey(public_key)
     address = oasis.staking.addressToBech32(data)
+    account.which = publicKey.which
     account.public_key = public_key
     account.address = address
   }
@@ -47,7 +48,7 @@ async function getNonce(address) {
 }
 /**
  * use grpc get nonce
- * @param {*} address 
+ * @param {string} address staking address in bech32
  */
 async function getUseBalance(address) {
   const oasisClient = getOasisClient()
@@ -57,8 +58,8 @@ async function getUseBalance(address) {
   if (account && account.code && account.code !== 0) {
     return { err: account }
   }
-  let balance = account?.general?.balance || 0
-  balance = oasis.quantity.toBigInt(balance).toString()
+  let balance = account?.general?.balance
+  balance = (balance ? oasis.quantity.toBigInt(balance) : 0).toString()
   let nonce = account?.general?.nonce || 0
   return { balance, nonce }
 }
@@ -67,7 +68,7 @@ async function getUseBalance(address) {
  * @returns 
  */
 function getOasisClient() {
-  const oasisClient = new oasis.client.NodeInternal('https://grpc-testnet.oasisscan.com')
+  const oasisClient = new oasis.client.NodeInternal('https://grpc-web.oasis.dev/api/testnet')
   // ("https://grpc-testnet.oasisscan.com")
   return oasisClient
 }
@@ -149,7 +150,7 @@ const playground = (async function () {
   // 获取签名者
   // 打包交易
   // 4，签名
-  let extensionId = "fdkfkdobkkgngljecckfaeiabkinnnij"
+  let extensionId = "aebmnobkijmgfmmgokeacndlgjblkpfp"
   // "aeiciliacehpifhikhkgkmohihocgain"//"fdkfkdobkkgngljecckfaeiabkinnnij"
 
   const extension_url = "chrome-extension://" + extensionId
@@ -170,6 +171,8 @@ const playground = (async function () {
         console.log('watchKeys======0', connection);
         watchKeys(connection, (newKeys) => {
           console.log('watchKeys======1', newKeys);
+          if (!newKeys) throw new Error('new keys falsy');
+          if (!newKeys.length) throw new Error('new keys empty');
           console.log('keys change', toBase64(newKeys[0].metadata.public_key));
         });
 
@@ -232,7 +235,7 @@ const playground = (async function () {
       // 设置feeGas
       // 设置feeAmount
       console.log('sendButton=====0', account);
-      let from = account && account.address ? account.address : ""
+      let from = account && account.which ? account.which : ""
 
       // let nonce = await getNonce(from)
       // console.log('getUseBalance==nonce',nonce)
@@ -249,7 +252,7 @@ const playground = (async function () {
       const publicKey = signer.public();
 
       const oasisClient = getOasisClient()
-      let accountDetail = await getUseBalance(from)
+      let accountDetail = await getUseBalance(oasis.staking.addressToBech32(await oasis.staking.addressFromPublicKey(publicKey)))
       console.log('getUseBalance==balance', accountDetail)
       //第五步 获取收款地址
 
@@ -259,7 +262,7 @@ const playground = (async function () {
       let receiveAddress = receiveAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
       receiveAddress = await oasis.staking.addressFromBech32(receiveAddress)
 
-      let sendNonce = sendNonceInput.value || accountDetail.nonce
+      let sendNonce = sendNonceInput.value ? +sendNonceInput.value : accountDetail.nonce
 
 
       let sendFeeAmount = 0n
@@ -333,10 +336,9 @@ const playground = (async function () {
     let vaildatorAddress = vaildatorAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
     vaildatorAddress = await oasis.staking.addressFromBech32(vaildatorAddress)
 
-    let stakeNonce = stakeNonceInput.value || 43
+    let stakeNonce = stakeNonceInput.value ? +stakeNonceInput.value : 43
 
-    let stakeFeeGas = stakeFeeGasInput.value || 3000
-    stakeFeeGas = oasis.quantity.fromBigInt(stakeFeeGas)
+    let stakeFeeGas = stakeFeeGasInput.value ? +stakeFeeGasInput.value : 3000
 
     let stakeFeeAmount = stakeFeeAmountInput.value || 0
     stakeFeeAmount = oasis.quantity.fromBigInt(stakeFeeAmount)
@@ -356,7 +358,7 @@ const playground = (async function () {
         amount: addEscrowAmount,
       });
     // 第七步 签名
-    let res = await tw.sign(signer, 'fake-chain-context-for-testing');
+    let res = await tw.sign(signer, '5ba68bc5e01e06f755c4c044dd11ec508e4c17f1faf40c0e67874388437a9e55');
     let signature = hex2uint(tw.signedTransaction.signature.signature)
     let base64Sign = toBase64(signature)
     let hash = await tw.hash()
