@@ -235,10 +235,7 @@ const playground = (async function () {
       // 设置feeGas
       // 设置feeAmount
       console.log('sendButton=====0', account);
-      // TODO: switch to the below and make the extension compatible, likely by replicating the
-      // address in the `which` field in the keys list implementation
-      // let from = account && account.which ? account.which : ""
-      let from = account && account.address ? account.address : ""
+      let from = account && account.which ? account.which : ""
 
       // let nonce = await getNonce(from)
       // console.log('getUseBalance==nonce',nonce)
