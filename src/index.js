@@ -255,7 +255,7 @@ const playground = (async function () {
       const publicKey = signer.public();
 
       const oasisClient = getOasisClient()
-      let accountDetail = await getUseBalance(from)
+      let accountDetail = await getUseBalance(oasis.staking.addressToBech32(await oasis.staking.addressFromPublicKey(publicKey)))
       console.log('getUseBalance==balance', accountDetail)
       //第五步 获取收款地址
 
