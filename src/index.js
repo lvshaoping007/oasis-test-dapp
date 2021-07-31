@@ -48,7 +48,7 @@ async function getNonce(address) {
 }
 /**
  * use grpc get nonce
- * @param {*} address 
+ * @param {string} address staking address in bech32
  */
 async function getUseBalance(address) {
   const oasisClient = getOasisClient()
