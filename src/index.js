@@ -67,7 +67,8 @@ async function getUseBalance(address) {
  * @returns 
  */
 function getOasisClient() {
-  const oasisClient = new oasis.client.NodeInternal("https://grpc-testnet.oasisscan.com")
+  const oasisClient = new oasis.client.NodeInternal('https://grpc-testnet.oasisscan.com')
+  // ("https://grpc-testnet.oasisscan.com")
   return oasisClient
 }
 // ========================================================================
@@ -269,18 +270,20 @@ const playground = (async function () {
       let lastFeeAmount = sendFeeAmount
       tw.setFeeAmount(oasis.quantity.fromBigInt(BigInt(lastFeeAmount)))
 
-      let feeGas = await tw.estimateGas(oasisClient, publicKey)
-      console.log("feeGas===", feeGas)
-      let sendFeeGas = feeGas
+     
 
-      tw.setFeeGas(sendFeeGas)
+      
 
       tw.setBody({
         to: receiveAddress,
         amount: sendAmount,
       })
+      let feeGas = await tw.estimateGas(oasisClient, publicKey)
+      let sendFeeGas = feeGas
+      tw.setFeeGas(sendFeeGas)
 
-      await tw.sign(signer, 'fake-chain-context-for-testing');
+      let chainContext = await oasisClient.consensusGetChainContext()
+      await tw.sign(signer, chainContext)
 
       console.log('sendButton=====5', tw.signedTransaction.signature.signature);
       console.log('sendButton=====6', uint2hex(tw.signedTransaction.signature.signature));
