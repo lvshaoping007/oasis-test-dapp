@@ -17,11 +17,10 @@ function uint2hex(uint) {
   return Buffer.from(uint).toString('hex')
 }
 
-async function publicKeyToAddress(publicKey){
+async function publicKeyToAddress(keyObj){
   let address
-  let public_key = publicKey?.metadata?.public_key || ""
+  let public_key = keyObj?.metadata?.public_key || ""
   if (public_key) {
-    console.log('publicKey', uint2hex(public_key))
     const data = await oasis.staking.addressFromPublicKey(public_key)
     address = oasis.staking.addressToBech32(data)
     account.public_key = public_key
@@ -54,11 +53,10 @@ async function getUseBalance(address) {
   let shortKey = await oasis.staking.addressFromBech32(address)
   let height = oasis.consensus.HEIGHT_LATEST
   let account = await oasisClient.stakingAccount({ height: height, owner: shortKey, }).catch((err) => err)
-  if (account && account.code && account.code !== 0) {
-    return { err: account }
-  }
   let balance = account?.general?.balance || 0
-  balance = oasis.quantity.toBigInt(balance).toString()
+  if(balance){
+    balance = oasis.quantity.toBigInt(balance).toString()
+  }
   let nonce = account?.general?.nonce || 0
   return { balance, nonce }
 }
@@ -111,24 +109,31 @@ const nonceDiv = document.getElementById('nonce')
 
 
 //==============================================================================
-function watchKeys(conn, handleNewKeys) {
-  console.log('watchKeys======2', conn);
-  if (!conn) {
-    return
-  }
-  console.log('watchKeys======3');
-  let lastRequested = 0;
-  oasisExt.keys.setKeysChangeHandler(conn, (event) => {
-    console.log('keys change', event);
-    // resolve(event.keys);
-});
-}
 
 
 
 let connection
 let account = {}
 const playground = (async function () {
+
+
+  function watchKeys(conn) {
+    oasisExt.keys.setKeysChangeHandler(conn, async (event) => {
+      console.log('watchKeys======1', event);
+      setAccountDetailClear()
+      // 拿到新的key后更新 当前账户及别的
+  
+      let keys = event.keys
+      console.log('watchKeys======2', keys);
+      if(keys.length>0){
+        let address = await publicKeyToAddress(keys[0])
+        console.log('watchKeys======5', address);
+        accountsResults.innerHTML = address || 'Not able to get accounts'
+        await setAccountDetail(address)
+      }
+  });
+  }
+  
 
   // 1,点击connect 去连接账户
   // 2，如果有connect ，则可以点击获取账户
@@ -157,18 +162,7 @@ const playground = (async function () {
       console.log('connection===', connection)
       if (connection) {
         console.log('watchKeys======0', connection);
-        watchKeys(connection, async (newKeys) => {
-          console.log('watchKeys======1', newKeys);
-          
-          setAccountDetailClear()
-          // 拿到新的key后更新 当前账户及别的
-
-          let newAddress = newKeys[0].which
-          if(newAddress){
-            await setAccountDetail(newAddress)
-            // console.log('keys change', toBase64(newKeys[0].metadata.public_key));
-          }
-        });
+        watchKeys(connection);
 
         onboardButton.innerText = 'Connected'
         onboardButton.disabled = true
@@ -189,15 +183,12 @@ const playground = (async function () {
     balanceDiv.innerHTML = "0"
     nonceDiv.innerHTML = "null"
   }
-
   async function setAccountDetail(address) {
     console.log('setAccountDetail==address',address)
 
     accountsDiv.innerHTML = address
-    accountsResults.innerHTML = address 
-
     let accountDetail = await getUseBalance(address)
-    console.log('setAccountDetail===accountDetail',accountDetail)
+
     balanceDiv.innerHTML = accountDetail.balance
     nonceDiv.innerHTML = accountDetail.nonce
   }
@@ -216,7 +207,7 @@ const playground = (async function () {
         // 授权完账后就开始渲染账户情况
         // 获取账户余额 和nonce  然后显示在页面上
         // nonce 显示在输入框里 和html外面
-        // accountsResults.innerHTML = result || 'Not able to get accounts'
+        accountsResults.innerHTML = result || 'Not able to get accounts'
       } else {
         result = keys.error
         accountsResults.innerHTML = result || 'Not able to get accounts'
@@ -230,24 +221,14 @@ const playground = (async function () {
    * send transfer
    */
   sendButton2.onclick = async () => {
-    console.log('sendButton=====0', account);
     try {
-
       // 设置转账金额
       // 设置收款金额
       // 设置nonce
       // 设置feeGas
       // 设置feeAmount
-      console.log('sendButton=====0', account);
       let from = account && account.address ? account.address : ""
-
-      // let nonce = await getNonce(from)
-      // console.log('getUseBalance==nonce',nonce)
-      console.log('sendButton=====1', from);
-      console.log('sendButton=====1-1', connection);
       const signer = await oasisExt.signature.ExtContextSigner.request(connection, from).catch(err => err);
-      console.log('sendButton=====2', signer);
-      console.log('web---got signer', signer);
       if (signer.error) {
         alert(signer.error)
         return
@@ -257,10 +238,9 @@ const playground = (async function () {
 
       const oasisClient = getOasisClient()
       let accountDetail = await getUseBalance(from)
-      console.log('getUseBalance==balance', accountDetail)
       //第五步 获取收款地址
 
-      let sendAmount = sendAmountInput.value || 2
+      let sendAmount = sendAmountInput.value || 3*1e9
       sendAmount = oasis.quantity.fromBigInt(sendAmount)
 
       let receiveAddress = receiveAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
@@ -277,10 +257,6 @@ const playground = (async function () {
       let lastFeeAmount = sendFeeAmount
       tw.setFeeAmount(oasis.quantity.fromBigInt(BigInt(lastFeeAmount)))
 
-     
-
-      
-
       tw.setBody({
         to: receiveAddress,
         amount: sendAmount,
@@ -292,16 +268,6 @@ const playground = (async function () {
       let chainContext = await oasisClient.consensusGetChainContext()
       await tw.sign(signer, chainContext)
 
-      console.log('sendButton=====5', tw.signedTransaction.signature.signature);
-      console.log('sendButton=====6', uint2hex(tw.signedTransaction.signature.signature));
-
-      console.log('sendButton=====7', tw.signedTransaction.untrusted_raw_value);
-      console.log('sendButton=====8', uint2hex(tw.signedTransaction.untrusted_raw_value));
-
-      console.log('sendButton=====9', oasis.misc.toHex(oasis.misc.toCBOR(tw.signedTransaction)));
-
-
-
       try {
         await tw.submit(oasisClient);
       } catch (e) {
@@ -310,11 +276,9 @@ const playground = (async function () {
       }
 
       let hash = await tw.hash()
-      console.log('sendButton=====6', hash);
 
       sendResultDisplay.innerHTML = hash || ''
     } catch (error) {
-      console.log('sendButton=====error', error);
       sendResultDisplay.innerHTML = error || ''
     }
   }
@@ -323,7 +287,6 @@ const playground = (async function () {
   /**
    * add escrow
    */
-
 
   addEscrowButton.onclick = async () => {
     let from = account && account.length > 0 ? account[0] : ""
