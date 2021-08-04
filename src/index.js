@@ -41,7 +41,6 @@ async function getNonce(address) {
     account_address: publicKey,
     height: oasis.consensus.HEIGHT_LATEST
   }) ?? 0;
-  console.log('getNonce===nonce', nonce)
   return nonce
 }
 /**
@@ -119,15 +118,12 @@ const playground = (async function () {
 
   function watchKeys(conn) {
     oasisExt.keys.setKeysChangeHandler(conn, async (event) => {
-      console.log('watchKeys======1', event);
       setAccountDetailClear()
       // 拿到新的key后更新 当前账户及别的
   
       let keys = event.keys
-      console.log('watchKeys======2', keys);
       if(keys.length>0){
         let address = await publicKeyToAddress(keys[0])
-        console.log('watchKeys======5', address);
         accountsResults.innerHTML = address || 'Not able to get accounts'
         await setAccountDetail(address)
       }
@@ -153,15 +149,12 @@ const playground = (async function () {
 
 
   onboardButton.onclick = async () => {
-    console.log('onboardButton')
     // todo 1 如何判断已经安装插件
     if (!connection) {
       // alert("请先安装oasis-extension-wallet")
       onboardButton.innerText = 'Onboarding in progress'
       connection = await oasisExt.connection.connect(extension_url, extPath);
-      console.log('connection===', connection)
       if (connection) {
-        console.log('watchKeys======0', connection);
         watchKeys(connection);
 
         onboardButton.innerText = 'Connected'
@@ -184,12 +177,11 @@ const playground = (async function () {
     nonceDiv.innerHTML = "null"
   }
   async function setAccountDetail(address) {
-    console.log('setAccountDetail==address',address)
 
     accountsDiv.innerHTML = address
     let accountDetail = await getUseBalance(address)
 
-    balanceDiv.innerHTML = accountDetail.balance
+    balanceDiv.innerHTML = accountDetail.balance / 1e9
     nonceDiv.innerHTML = accountDetail.nonce
   }
   /**
@@ -289,47 +281,57 @@ const playground = (async function () {
    */
 
   addEscrowButton.onclick = async () => {
-    let from = account && account.length > 0 ? account[0] : ""
-    console.log("web---sendButton===from", from)
-    console.log("web---sendButton===connection", connection)
 
+    let from = account && account.address ? account.address : ""
     const signer = await oasisExt.signature.ExtContextSigner.request(connection, from).catch(err => err);
-    console.log('web---got signer', signer);
+    if (signer.error) {
+      alert(signer.error)
+      return
+    }
+    //第四步 公钥
+    const publicKey = signer.public();
 
+    const oasisClient = getOasisClient()
+    let accountDetail = await getUseBalance(from)
+    //第五步 获取收款地址
 
-    let addEscrowAmount = addEscrowAmountInput.value || 2
+    let addEscrowAmount = addEscrowAmountInput.value || 100*1e9
     addEscrowAmount = oasis.quantity.fromBigInt(addEscrowAmount)
 
-    let vaildatorAddress = vaildatorAddressInput.value || "oasis1qzaa7s3df8ztgdryn8u8zdsc8zx0drqsa5eynmam"
+    let vaildatorAddress = vaildatorAddressInput.value || "oasis1qqv25adrld8jjquzxzg769689lgf9jxvwgjs8tha"
     vaildatorAddress = await oasis.staking.addressFromBech32(vaildatorAddress)
 
-    let stakeNonce = stakeNonceInput.value || 43
-
-    let stakeFeeGas = stakeFeeGasInput.value || 3000
-    stakeFeeGas = oasis.quantity.fromBigInt(stakeFeeGas)
-
-    let stakeFeeAmount = stakeFeeAmountInput.value || 0
-    stakeFeeAmount = oasis.quantity.fromBigInt(stakeFeeAmount)
+    let sendNonce = stakeNonceInput.value || accountDetail.nonce
 
 
-    //第五步 获取收款地址
-    const dst = oasis.signature.NaclSigner.fromRandom('this key is not important');
+    let sendFeeAmount = 0n
 
+    const tw = oasis.staking.addEscrowWrapper()
+    tw.setNonce(sendNonce)
 
-    const tw = oasis.staking
-      .addEscrowWrapper()
-      .setNonce(stakeNonce)
-      .setFeeAmount(stakeFeeAmount)
-      .setFeeGas(stakeFeeGas)
-      .setBody({
-        account: vaildatorAddress,
-        amount: addEscrowAmount,
-      });
-    // 第七步 签名
-    let res = await tw.sign(signer, 'fake-chain-context-for-testing');
-    let signature = hex2uint(tw.signedTransaction.signature.signature)
-    let base64Sign = toBase64(signature)
+    let lastFeeAmount = sendFeeAmount
+    tw.setFeeAmount(oasis.quantity.fromBigInt(BigInt(lastFeeAmount)))
+
+    tw.setBody({
+      account: vaildatorAddress,
+      amount: addEscrowAmount,
+    })
+    let feeGas = await tw.estimateGas(oasisClient, publicKey)
+    let sendFeeGas = feeGas
+    tw.setFeeGas(sendFeeGas)
+
+    let chainContext = await oasisClient.consensusGetChainContext()
+    await tw.sign(signer, chainContext)
+
+    try {
+      await tw.submit(oasisClient);
+    } catch (e) {
+      console.error('submit failed', e);
+      throw e;
+    }
+
     let hash = await tw.hash()
+
     addEscrowResultDisplay.innerHTML = hash || ''
   }
 })();
