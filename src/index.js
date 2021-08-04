@@ -118,21 +118,10 @@ function watchKeys(conn, handleNewKeys) {
   }
   console.log('watchKeys======3');
   let lastRequested = 0;
-  oasisExt.keys.setKeysChangeHandler(conn, (_) => {
-    console.log('watchKeys======4');
-    const requestSeq = ++lastRequested;
-    oasisExt.keys
-      .list(conn)
-      .then((keys) => {
-        console.log('watchKeys======5', keys);
-        if (requestSeq !== lastRequested) return;
-        console.log('watchKeys======6', keys);
-        handleNewKeys(keys);
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  });
+  oasisExt.keys.setKeysChangeHandler(conn, (event) => {
+    console.log('keys change', event);
+    // resolve(event.keys);
+});
 }
 
 
@@ -168,9 +157,17 @@ const playground = (async function () {
       console.log('connection===', connection)
       if (connection) {
         console.log('watchKeys======0', connection);
-        watchKeys(connection, (newKeys) => {
+        watchKeys(connection, async (newKeys) => {
           console.log('watchKeys======1', newKeys);
-          console.log('keys change', toBase64(newKeys[0].metadata.public_key));
+          
+          setAccountDetailClear()
+          // 拿到新的key后更新 当前账户及别的
+
+          let newAddress = newKeys[0].which
+          if(newAddress){
+            await setAccountDetail(newAddress)
+            // console.log('keys change', toBase64(newKeys[0].metadata.public_key));
+          }
         });
 
         onboardButton.innerText = 'Connected'
@@ -185,12 +182,22 @@ const playground = (async function () {
     }
   }
 
+  function setAccountDetailClear() {
+    accountsDiv.innerHTML = ""
+    accountsResults.innerHTML = "" 
+
+    balanceDiv.innerHTML = "0"
+    nonceDiv.innerHTML = "null"
+  }
+
   async function setAccountDetail(address) {
     console.log('setAccountDetail==address',address)
 
     accountsDiv.innerHTML = address
-    let accountDetail = await getUseBalance(address)
+    accountsResults.innerHTML = address 
 
+    let accountDetail = await getUseBalance(address)
+    console.log('setAccountDetail===accountDetail',accountDetail)
     balanceDiv.innerHTML = accountDetail.balance
     nonceDiv.innerHTML = accountDetail.nonce
   }
@@ -209,7 +216,7 @@ const playground = (async function () {
         // 授权完账后就开始渲染账户情况
         // 获取账户余额 和nonce  然后显示在页面上
         // nonce 显示在输入框里 和html外面
-        accountsResults.innerHTML = result || 'Not able to get accounts'
+        // accountsResults.innerHTML = result || 'Not able to get accounts'
       } else {
         result = keys.error
         accountsResults.innerHTML = result || 'Not able to get accounts'
