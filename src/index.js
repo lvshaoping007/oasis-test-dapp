@@ -139,13 +139,9 @@ const playground = (async function () {
   // 获取签名者
   // 打包交易
   // 4，签名
-  let extensionId = "fdkfkdobkkgngljecckfaeiabkinnnij"
-  // "aeiciliacehpifhikhkgkmohihocgain"//"fdkfkdobkkgngljecckfaeiabkinnnij"
+  let extensionId = "ppdadbejkmjnefldpcdjhnkpbjkikoip"
 
   const extension_url = "chrome-extension://" + extensionId
-
-  // blgopabeahlgefobchbgbkekajmbnfmh   ext
-  // fdkfkdobkkgngljecckfaeiabkinnnij     my ext
 
 
   onboardButton.onclick = async () => {
